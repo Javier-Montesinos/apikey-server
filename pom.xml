@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.montesinos.securedbyheadertoken</groupId>
-	<artifactId>server</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>restapi-secured-by-header-token-server</name>
-	<description>Demo project for Spring Boot</description>
+	<artifactId>apikey-server</artifactId>
+	<version>0.3</version>
+	<name>API Key Server Example</name>
+	<description>Ejemplo de api rest Spring Boot que utiliza keys para validar sus peticiones</description>
 
 	<properties>
 		<java.version>1.8</java.version>
