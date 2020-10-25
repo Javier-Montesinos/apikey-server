@@ -27,25 +27,25 @@ import org.springframework.web.client.RestTemplate;
 @Order(1)
 public class CheckTokenHeaderFilter implements Filter {
 
-	private final static Logger LOG = LoggerFactory.getLogger(CheckTokenHeaderFilter.class);
-	
 	@Value("${apikey.user.name}")
-	private final String apiKeyUserName = null;
+	private String apiKeyUserName = "";
 	
 	@Value("${apikey.user.value}")
-	private String apiKeyUserValue;
+	private String apiKeyUserValue = "";
 		
 	@Value("${apikey.name}")
-	private final String apiKeyName = null;
+	private String apiKeyName = "";
 	
 	@Value("${apikey.value}")
-	private String apiKeyValue;
+	private String apiKeyValue = "";
 		
 	@Value("${apikey.scope}")
-	private final String apiScope = null;	
+	private String apiScope = "";	
 	
 	@Value("${apikey.manager.url}")
-	private final String apiKeyManagerUrl = null;
+	private String apiKeyManagerUrl = "";
+	
+	private static final Logger LOG = LoggerFactory.getLogger(CheckTokenHeaderFilter.class);
 	
 	@Override
 	public void init(final FilterConfig filterConfig) throws ServletException {
@@ -59,12 +59,12 @@ public class CheckTokenHeaderFilter implements Filter {
 		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse res = (HttpServletResponse) response;
 				
-		String apiKey = req.getHeader(this.apiKeyName);
-		String userName = req.getHeader(this.apiKeyUserName);
+		String apiKey = req.getHeader(apiKeyName);
+		String userName = req.getHeader(apiKeyUserName);
 		
 		LOG.info("req : {}, user name: {}, api key value: {}", req.getRequestURI(), userName, apiKey);
 					
-		if(authApiKey(userName, apiKey) == true) {
+		if(authApiKey(userName, apiKey)) {
 			chain.doFilter(request, response);
 			
 		} else {		
@@ -89,13 +89,13 @@ public class CheckTokenHeaderFilter implements Filter {
 		RestTemplate restTemplate = new RestTemplate();
 		
 		HttpHeaders headers = new HttpHeaders();        
-        headers.add(this.apiKeyUserName, this.apiKeyUserValue);
-        headers.add(this.apiKeyName, this.apiKeyValue);
+        headers.add(apiKeyUserName, apiKeyUserValue);
+        headers.add(apiKeyName, apiKeyValue);
         
-		String urlAuthenticateKey= this.apiKeyManagerUrl + "/auth/" + this.apiScope + "/" + userName + "/" + apiKey;
+		String urlAuthenticateKey= apiKeyManagerUrl + "/auth/" + apiScope + "/" + userName + "/" + apiKey;
 		ResponseEntity<String> keyAuthResponse = restTemplate.exchange(urlAuthenticateKey, 
 				HttpMethod.GET, new HttpEntity<Object>(headers), String.class);		
 
-		return Boolean.valueOf(keyAuthResponse.getBody()).booleanValue();
+		return Boolean.parseBoolean(keyAuthResponse.getBody());
 	}
 }
