@@ -48,14 +48,26 @@ public class Usuario {
 
 ### 3. Probar
 
+**Con Maven:**
 ```bash
 # Compilar
 ./mvnw clean install
 
 # Ejecutar
 ./mvnw spring-boot:run
+```
 
-# Probar endpoint
+**Con Gradle:**
+```bash
+# Compilar
+./gradlew clean build
+
+# Ejecutar
+./gradlew bootRun
+```
+
+**Probar endpoint:**
+```bash
 curl -H "Api-Key-Username: user" \
      -H "Api-Key: key" \
      http://localhost:8081/intranet-extranet-api/api/v1/usuarios/123
@@ -94,6 +106,8 @@ server.port=9090
 O al ejecutar:
 ```bash
 java -jar target/apikey-server-0.3.jar --server.port=9090
+# o con Gradle
+java -jar build/libs/apikey-server-0.3.jar --server.port=9090
 ```
 
 ### Configuración por Entorno
@@ -105,7 +119,11 @@ Crear archivos específicos:
 
 Activar con:
 ```bash
+# Maven
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+
+# Gradle
+./gradlew bootRun --args='--spring.profiles.active=dev'
 ```
 
 ## Depurar Problemas de Autenticación
@@ -188,28 +206,43 @@ public class MiNuevoFiltro implements Filter {
 
 ## Actualizar Versión del Proyecto
 
-### 1. Modificar `pom.xml`
+### 1. Modificar Archivos de Configuración
 
+**En `pom.xml`:**
 ```xml
 <version>0.4</version>
+```
+
+**En `build.gradle`:**
+```gradle
+version = '0.4'
 ```
 
 ### 2. Recompilar
 
 ```bash
+# Maven
 ./mvnw clean install
+
+# Gradle
+./gradlew clean build
 ```
 
 ### 3. Actualizar Docker Tag
 
 ```bash
+# Con Maven
 docker build -t fj2m/apikey-server:0.4 .
+
+# Con Gradle
+docker build --build-arg JAR_FILE=build/libs/*.jar -t fj2m/apikey-server:0.4 .
 ```
 
 ### 4. Actualizar Documentación
 
 Actualizar referencias de versión en:
-- Este archivo (CLAUDE.md)
+- CLAUDE.md
+- docs/*.md
 - README (si existe)
 - Dockerfile
 
@@ -246,13 +279,18 @@ class DocumentTest {
 ### 2. Ejecutar Tests
 
 ```bash
+# Maven
 ./mvnw test
+
+# Gradle
+./gradlew test
 ```
 
 ## Trabajar con Docker
 
 ### Reconstruir Imagen
 
+**Con Maven:**
 ```bash
 # Recompilar aplicación
 ./mvnw clean install -DskipTests
@@ -262,6 +300,18 @@ docker rmi fj2m/apikey-server:0.3
 
 # Construir nueva imagen
 docker build -t fj2m/apikey-server:0.3 .
+```
+
+**Con Gradle:**
+```bash
+# Recompilar aplicación
+./gradlew clean build -x test
+
+# Eliminar imagen anterior
+docker rmi fj2m/apikey-server:0.3
+
+# Construir nueva imagen
+docker build --build-arg JAR_FILE=build/libs/*.jar -t fj2m/apikey-server:0.3 .
 ```
 
 ### Conectar con Key Manager
@@ -345,7 +395,7 @@ apikey.manager.url=${APIKEY_MANAGER_URL:http://localhost:8080/apikey-amanger/api
 
 **Causa**: Contexto Spring no se levanta
 
-**Solución**:
+**Solución con Maven**:
 ```bash
 # Limpiar y recompilar
 ./mvnw clean install
@@ -354,14 +404,26 @@ apikey.manager.url=${APIKEY_MANAGER_URL:http://localhost:8080/apikey-amanger/api
 ./mvnw dependency:tree
 ```
 
+**Solución con Gradle**:
+```bash
+# Limpiar y recompilar
+./gradlew clean build
+
+# Verificar dependencias
+./gradlew dependencies
+```
+
 ### Error: Port already in use
 
 **Causa**: Puerto 8081 ocupado
 
 **Solución**:
 ```bash
-# Cambiar puerto temporalmente
+# Cambiar puerto temporalmente con Maven
 ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=9090
+
+# Cambiar puerto temporalmente con Gradle
+./gradlew bootRun --args='--server.port=9090'
 
 # O encontrar y matar proceso
 lsof -i :8081
@@ -372,6 +434,7 @@ kill -9 <PID>
 
 ### Javadoc
 
+**Con Maven:**
 ```bash
 # Generar Javadoc
 ./mvnw javadoc:javadoc
@@ -379,10 +442,19 @@ kill -9 <PID>
 # Ver en: target/site/apidocs/index.html
 ```
 
+**Con Gradle:**
+```bash
+# Generar Javadoc
+./gradlew javadoc
+
+# Ver en: build/docs/javadoc/index.html
+```
+
 ## Ejecutar Análisis de Código
 
 ### SonarQube
 
+**Con Maven:**
 ```bash
 ./mvnw clean verify sonar:sonar \
   -Dsonar.projectKey=apikey-server \
@@ -390,9 +462,17 @@ kill -9 <PID>
   -Dsonar.login=<token>
 ```
 
+**Con Gradle:**
+```bash
+./gradlew sonar \
+  -Dsonar.projectKey=apikey-server \
+  -Dsonar.host.url=http://localhost:9000 \
+  -Dsonar.login=<token>
+```
+
 ### Checkstyle
 
-Agregar a `pom.xml`:
+**Maven** - Agregar a `pom.xml`:
 ```xml
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
@@ -404,4 +484,20 @@ Agregar a `pom.xml`:
 Ejecutar:
 ```bash
 ./mvnw checkstyle:check
+```
+
+**Gradle** - Agregar a `build.gradle`:
+```gradle
+plugins {
+    id 'checkstyle'
+}
+
+checkstyle {
+    toolVersion = '9.3'
+}
+```
+
+Ejecutar:
+```bash
+./gradlew checkstyleMain checkstyleTest
 ```

@@ -10,8 +10,9 @@ RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
 # PUERTO QUE EXPONEMOS
-EXPOSE 8080
+EXPOSE 8081
 
+# Soporta JAR desde Maven (target/) o Gradle (build/libs/)
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
 
@@ -21,16 +22,18 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 # ["java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseCGroupMemoryLimitForHeap", 
 # "-Djava.security.egd=file:/dev/./urandom","-jar","/app/spring-boot-application.jar"]
 
-# pasos para la ejecución
+# Pasos para la ejecución
 # ...............................................................................................
-# 1. construir el jar de la app sin pasar los tests
-# ./mvnw clean install -DskipTests
-
-# 2. construir la imagen
-# docker build -t fj2m/apikey-server:0.3 .
-
-# 3. correr el contenedor
+# OPCIÓN A: Con Maven
+# 1. Construir el jar: ./mvnw clean install -DskipTests
+# 2. Construir imagen: docker build -t fj2m/apikey-server:0.3 .
+#
+# OPCIÓN B: Con Gradle
+# 1. Construir el jar: ./gradlew clean build -x test
+# 2. Construir imagen: docker build --build-arg JAR_FILE=build/libs/*.jar -t fj2m/apikey-server:0.3 .
+#
+# 3. Correr el contenedor
 # docker run -d -p 8081:8081 -t --name=apikey-server --network=apikey-network fj2m/apikey-server:0.3
-
-# 4. ver los logs
-# docker logs CONTAINER ID
+#
+# 4. Ver los logs
+# docker logs CONTAINER_ID
