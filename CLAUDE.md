@@ -6,7 +6,7 @@ Bienvenido al proyecto **API Key Server**. Esta documentación está diseñada p
 
 **Nombre**: API Key Server Example
 **Versión**: 0.3
-**Tecnología**: Spring Boot 2.3.4 + Java 8 + Maven
+**Tecnología**: Spring Boot 2.3.4 + Java 8 + Maven/Gradle
 **Propósito**: API REST que valida peticiones mediante API keys en las cabeceras HTTP, verificando contra un servicio externo de gestión de claves.
 
 ## 🗂️ Estructura de Documentación
@@ -29,12 +29,22 @@ Esta documentación está organizada en módulos para facilitar su consulta:
 
 ### Construir y Ejecutar
 
+**Con Maven:**
 ```bash
 # Compilar el proyecto
 ./mvnw clean install -DskipTests
 
 # Ejecutar localmente
 ./mvnw spring-boot:run
+```
+
+**Con Gradle:**
+```bash
+# Compilar el proyecto
+./gradlew clean build -x test
+
+# Ejecutar localmente
+./gradlew bootRun
 ```
 
 La aplicación estará disponible en:
@@ -54,7 +64,7 @@ docker run -d -p 8081:8081 --name=apikey-server fj2m/apikey-server:0.3
 
 - **Framework**: Spring Boot 2.3.4.RELEASE
 - **Java**: 1.8 (Java 8)
-- **Build**: Maven
+- **Build**: Maven 3.6.x / Gradle 7.6.4 (soporta ambos)
 - **Container**: Docker (OpenJDK 8 Alpine)
 - **Testing**: JUnit 5
 

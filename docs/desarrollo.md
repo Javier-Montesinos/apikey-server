@@ -2,6 +2,8 @@
 
 ## Construcción del Proyecto
 
+Este proyecto soporta **Maven** y **Gradle** como sistemas de build. Puedes usar el que prefieras.
+
 ### Usando Maven Wrapper
 
 ```bash
@@ -21,12 +23,30 @@
 ./mvnw package
 ```
 
-### Artefacto Generado
+### Usando Gradle Wrapper
+
+```bash
+# Compilar sin ejecutar tests
+./gradlew clean build -x test
+
+# Compilar con tests
+./gradlew clean build
+
+# Solo ejecutar tests
+./gradlew test
+
+# Limpiar el proyecto
+./gradlew clean
+
+# Empaquetar
+./gradlew bootJar
+```
+
+### Artefactos Generados
 
 Después de compilar, el JAR se genera en:
-```
-target/apikey-server-0.3.jar
-```
+- **Maven**: `target/apikey-server-0.3.jar`
+- **Gradle**: `build/libs/apikey-server-0.3.jar`
 
 ## Ejecución Local
 
@@ -40,11 +60,24 @@ target/apikey-server-0.3.jar
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
+### Con Gradle
+
+```bash
+# Ejecutar directamente con Gradle
+./gradlew bootRun
+
+# Con perfil específico
+./gradlew bootRun --args='--spring.profiles.active=dev'
+```
+
 ### Con JAR Compilado
 
 ```bash
-# Después de compilar
+# Después de compilar con Maven
 java -jar target/apikey-server-0.3.jar
+
+# Después de compilar con Gradle
+java -jar build/libs/apikey-server-0.3.jar
 
 # Con perfil específico
 java -jar target/apikey-server-0.3.jar --spring.profiles.active=dev
@@ -66,10 +99,12 @@ curl -H "Api-Key-Username: usuario" \
 
 ### Construir Imagen Docker
 
-**Referencia**: Ver instrucciones completas en `Dockerfile:24-36`
+**Referencia**: Ver instrucciones completas en `Dockerfile:27-39`
+
+#### Opción A: Con Maven
 
 ```bash
-# Paso 1: Compilar el JAR
+# Paso 1: Compilar el JAR con Maven
 ./mvnw clean install -DskipTests
 
 # Paso 2: Construir la imagen Docker
@@ -77,6 +112,19 @@ docker build -t fj2m/apikey-server:0.3 .
 
 # Construir con tag personalizado
 docker build -t fj2m/apikey-server:latest .
+```
+
+#### Opción B: Con Gradle
+
+```bash
+# Paso 1: Compilar el JAR con Gradle
+./gradlew clean build -x test
+
+# Paso 2: Construir la imagen Docker (especificando ubicación del JAR)
+docker build --build-arg JAR_FILE=build/libs/*.jar -t fj2m/apikey-server:0.3 .
+
+# Construir con tag personalizado
+docker build --build-arg JAR_FILE=build/libs/*.jar -t fj2m/apikey-server:latest .
 ```
 
 ### Ejecutar Contenedor
@@ -127,8 +175,9 @@ docker exec -it apikey-server sh
 
 - **Imagen base**: `openjdk:8-jdk-alpine`
 - **Usuario**: Ejecuta como usuario no-root `spring:spring`
-- **Puerto expuesto**: 8080 en Dockerfile (pero la app usa 8081 - considerar corregir)
+- **Puerto expuesto**: 8081 (corregido)
 - **Red recomendada**: `apikey-network` para comunicación con Key Manager
+- **Build flexible**: Soporta JAR desde Maven (`target/`) o Gradle (`build/libs/`)
 
 ## Testing
 
@@ -140,6 +189,7 @@ Actualmente solo existe un test básico de contexto.
 
 ### Ejecutar Tests
 
+**Con Maven:**
 ```bash
 # Todos los tests
 ./mvnw test
@@ -149,6 +199,21 @@ Actualmente solo existe un test básico de contexto.
 
 # Con cobertura (requiere configurar plugin)
 ./mvnw test jacoco:report
+```
+
+**Con Gradle:**
+```bash
+# Todos los tests
+./gradlew test
+
+# Solo tests de una clase específica
+./gradlew test --tests RestapiSecuredByHeaderApiKeyServerApplicationTests
+
+# Con reporte HTML
+./gradlew test --info
+
+# Limpiar y ejecutar tests
+./gradlew clean test
 ```
 
 ### Framework de Testing
@@ -161,9 +226,16 @@ Actualmente solo existe un test básico de contexto.
 
 El proyecto incluye `spring-boot-devtools` que permite hot reload:
 
+**Con Maven:**
 1. Ejecuta la aplicación: `./mvnw spring-boot:run`
 2. Modifica código Java
 3. Recompila (en IDE o con Maven)
+4. La aplicación se reinicia automáticamente
+
+**Con Gradle:**
+1. Ejecuta la aplicación: `./gradlew bootRun`
+2. Modifica código Java
+3. Recompila (en IDE o con `./gradlew classes`)
 4. La aplicación se reinicia automáticamente
 
 **Nota**: Solo funciona en modo desarrollo, no en producción.
@@ -172,11 +244,18 @@ El proyecto incluye `spring-boot-devtools` que permite hot reload:
 
 ### Depuración Local
 
+**Con Maven:**
 ```bash
-# Con Maven
 ./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
+```
 
-# Con JAR
+**Con Gradle:**
+```bash
+./gradlew bootRun --debug-jvm
+```
+
+**Con JAR directamente:**
+```bash
 java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -jar target/apikey-server-0.3.jar
 ```
 
@@ -227,10 +306,21 @@ docker logs -f apikey-server
 
 ## Ciclo de Desarrollo Recomendado
 
+### Con Maven
 1. **Hacer cambios** en el código
-2. **Ejecutar tests** localmente: `./mvnw test`
+2. **Ejecutar tests**: `./mvnw test`
 3. **Compilar**: `./mvnw clean install`
 4. **Ejecutar localmente**: `./mvnw spring-boot:run`
+5. **Probar manualmente** con curl o Postman
+6. **Commit** de cambios
+7. **Construir Docker** (si es necesario)
+8. **Probar en Docker** con Key Manager
+
+### Con Gradle
+1. **Hacer cambios** en el código
+2. **Ejecutar tests**: `./gradlew test`
+3. **Compilar**: `./gradlew clean build`
+4. **Ejecutar localmente**: `./gradlew bootRun`
 5. **Probar manualmente** con curl o Postman
 6. **Commit** de cambios
 7. **Construir Docker** (si es necesario)
@@ -241,4 +331,45 @@ docker logs -f apikey-server
 - **IDE**: IntelliJ IDEA / Eclipse / VS Code con extensiones Java
 - **API Testing**: Postman / Insomnia / curl
 - **Docker**: Docker Desktop
-- **Maven**: Instalado o usar wrapper incluido (./mvnw)
+- **Build Tools**:
+  - Maven: Instalado o usar wrapper incluido (./mvnw)
+  - Gradle: Wrapper incluido (./gradlew) - versión 7.6.4
+
+## Diferencias entre Maven y Gradle
+
+### Cuándo Usar Cada Uno
+
+**Maven:**
+- ✅ Más tradicional y conocido
+- ✅ Configuración XML declarativa
+- ✅ Ciclos de vida bien definidos
+- ✅ Gran cantidad de plugins disponibles
+
+**Gradle:**
+- ✅ Más rápido (builds incrementales, cache)
+- ✅ Configuración más concisa (Groovy/Kotlin DSL)
+- ✅ Más flexible para builds complejos
+- ✅ Build scans para análisis de rendimiento
+
+### Comandos Equivalentes
+
+| Acción | Maven | Gradle |
+|--------|-------|--------|
+| Limpiar | `./mvnw clean` | `./gradlew clean` |
+| Compilar | `./mvnw compile` | `./gradlew compileJava` |
+| Ejecutar tests | `./mvnw test` | `./gradlew test` |
+| Empaquetar | `./mvnw package` | `./gradlew bootJar` |
+| Build completo | `./mvnw clean install` | `./gradlew clean build` |
+| Ejecutar app | `./mvnw spring-boot:run` | `./gradlew bootRun` |
+| Skip tests | `./mvnw install -DskipTests` | `./gradlew build -x test` |
+
+### Archivos de Configuración
+
+**Maven:**
+- `pom.xml` - Configuración del proyecto
+- `.mvn/` - Configuración del wrapper
+
+**Gradle:**
+- `build.gradle` - Script de build del proyecto
+- `settings.gradle` - Configuración del proyecto raíz
+- `gradle/` - Wrapper y configuración
